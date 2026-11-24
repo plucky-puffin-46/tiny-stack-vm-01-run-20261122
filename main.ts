@@ -1,6 +1,15 @@
 // Tiny stack VM for make.fun's tiny-stack-vm-01: runs every program in the
 // input dir on the kit ISA's stack machine and writes its exact output bytes
 // and exit code, following the reference step order and trap codes exactly.
+//
+// Semantics notes (where plain interpreters go wrong):
+// - Signed 32-bit values; MUL uses Math.imul so big products
+//   keep exact low 32 bits; DIV truncates, INT_MIN / -1 wraps.
+// - MOD keeps the dividend's sign, x % -1 is 0; DIVU, MODU
+//   and LTU read operands as unsigned; shifts use b & 31.
+// - Step order: limit, pc, opcode, immediate fit, underflow,
+//   overflow, own traps. A trap keeps prior output, writes
+//   nothing itself; jumps validate pc on the next step only.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
